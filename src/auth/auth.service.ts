@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -21,6 +22,7 @@ export class AuthService {
 		private jwtService: JwtService,
 		private prismaService: PrismaService,
 		private mailService: MailService,
+		private configService: ConfigService,
 	) {}
 
 	private async hashPassword(password: string) {
@@ -61,6 +63,76 @@ export class AuthService {
 			name: signUpDto.name,
 			email: signUpDto.email,
 			passwordHash,
+		});
+
+		// Uncomment this and delete the email verification logic if you do not need email verification in your system
+		// // Generate tokens
+		// const tokens = await this.generateTokens(user.id);
+
+		// return {
+		// 	tokens,
+		// 	userId: user.id,
+		// };
+
+		// Generate email verification token
+		const verificationToken = randomBytes(32).toString('hex');
+
+		// Save the token
+		await this.prismaService.emailVerificationToken.create({
+			data: {
+				token: verificationToken,
+				userId: user.id,
+				expiresAt: new Date(
+					Date.now() +
+						parseInt(
+							this.configService.get<string>(
+								'config.emailVerificationLinkTtlMins',
+							),
+						) *
+							60 *
+							1000,
+				),
+			},
+		});
+
+		// Send a email verification link
+		await this.mailService.sendEmailVerification(
+			user.email,
+			user.name,
+			`${this.configService.get<string>(
+				'config.frontendEmailVerificationLink',
+			)}?token=${verificationToken}`,
+		);
+
+		return {
+			message:
+				'Click the link sent to the provided email address to verify your account',
+		};
+	}
+
+	async verifyEmail(token: string) {
+		// Check if token is valid
+		const emailVerificationToken =
+			await this.prismaService.emailVerificationToken.findUnique({
+				where: { token },
+			});
+
+		if (!emailVerificationToken) {
+			throw new HttpException('Invalid token', HttpStatus.BAD_REQUEST);
+		}
+
+		// Mark user's email as verified
+		const user = await this.userService.updateUser(
+			emailVerificationToken.userId,
+			{
+				emailVerifiedAt: new Date(),
+			},
+		);
+
+		// Expire the token
+		await this.prismaService.emailVerificationToken.update({
+			where: { id: emailVerificationToken.id },
+			data: { expiresAt: new Date() },
 		});
 
 		// Generate tokens
