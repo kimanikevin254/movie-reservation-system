@@ -14,13 +14,14 @@ A secure and scalable authentication system built using the NestJS framework. Th
 
 ## Technologies Used
 
--   **NestJS**: A progressive Node.js framework for building efficient, reliable, and scalable server-side applications.
--   **TypeScript**: A superset of JavaScript that adds static types, enhancing the development experience and reducing runtime errors.
--   **Prisma**: An ORM (Object Relational Mapping) tool that simplifies database interactions and migrations.
--   **Mailgun**: A powerful email delivery service used for sending transactional emails (e.g., password reset links).
--   **bcrypt**: A library to hash passwords securely, ensuring that user credentials are stored safely.
--   **JWT (JSON Web Tokens)**: A compact, URL-safe means of representing claims to be transferred between two parties, used for token-based authentication.
--   **dotenv**: A module for loading environment variables from a `.env` file, helping manage configuration and secrets securely.
+-   **NestJS**: To build the API.
+-   **TypeScript**: To add static types, enhancing the development experience and reducing runtime errors.
+-   **Prisma**: To simplifify database interactions and migrations.
+-   **Mailgun**: For sending transactional emails (e.g., password reset links).
+-   **bcrypt**: To hash passwords securely, ensuring that user credentials are stored safely.
+-   **JWT (JSON Web Tokens)**: For token-based authentication.
+-   **dotenv**: To load environment variables from a `.env` file, helping manage configuration and secrets securely.
+-   **SQLite**: For the database
 
 ## Getting Started
 
@@ -35,5 +36,27 @@ To get started, follow these steps:
 1. Clone the repository:
 
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/kimanikevin254/nest-auth.git
     ```
+
+2. `cd` into the project folder.
+
+3. Install dependencies:
+
+    ```bash
+    npm i
+    ```
+
+4. Run prisma migrations:
+
+    ```bash
+    npm run prisma:migrations
+    ```
+
+5. Run the server:
+
+    ```bash
+    npm run start:dev
+    ```
+
+6. Check out the API docs on `http://localhost:3000/api/swagger`
