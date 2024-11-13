@@ -47,16 +47,18 @@ To get started, follow these steps:
     npm i
     ```
 
-4. Run prisma migrations:
+4. Rename `env.example` to `.env` and provide the necessary values.
+
+5. Run prisma migrations:
 
     ```bash
     npm run prisma:migrations
     ```
 
-5. Run the server:
+6. Run the server:
 
     ```bash
     npm run start:dev
     ```
 
-6. Check out the API docs on `http://localhost:3000/api/swagger`
+7. Check out the API docs on `http://localhost:3000/api/swagger`
