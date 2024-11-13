@@ -12,7 +12,9 @@ interface Config {
 	mailFrom: string;
 	appName: string;
 	frontendEmailVerificationLink: string;
+	frontendAppPwdResetLink: string;
 	emailVerificationLinkTtlMins: string;
+	passwordResetLinkTtlMins: string;
 }
 
 export default registerAs<Config>('config', () => ({
@@ -28,6 +30,8 @@ export default registerAs<Config>('config', () => ({
 	appName: process.env.APPLICATION_NAME,
 	frontendEmailVerificationLink:
 		process.env.FRONTEND_APPLICATION_EMAIL_VERIFICATION_LINK,
+	frontendAppPwdResetLink: process.env.FRONTEND_APP_PASSWORD_RESET_LINK,
 	emailVerificationLinkTtlMins:
 		process.env.EMAIL_VERIFICATION_LINK_TTL_MINUTES,
+	passwordResetLinkTtlMins: process.env.PASSWORD_RESET_LINK_TTL_MINUTES,
 }));

@@ -282,7 +282,16 @@ export class AuthService {
 				data: {
 					token: passwordResetToken,
 					userId: user.id,
-					expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+					expiresAt: new Date(
+						Date.now() +
+							parseInt(
+								this.configService.get<string>(
+									'config.passwordResetLinkTtlMins',
+								),
+							) *
+								60 *
+								1000,
+					),
 				},
 			});
 
@@ -290,7 +299,7 @@ export class AuthService {
 			await this.mailService.sendPasswordResetMail(
 				forgetPasswordDto.email,
 				user.name,
-				`http://localhost:3000/auth/reset-password?token=${passwordResetToken}`,
+				`${this.configService.get<string>('config.frontendAppPwdResetLink')}?token=${passwordResetToken}`,
 			);
 		}
 
