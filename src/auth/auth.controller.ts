@@ -34,7 +34,7 @@ export class AuthController {
 		summary: 'Verify email',
 		description: 'Verifies user email and return auth tokens.',
 	})
-	verifyEmail(@Query('token') verifyEmailDto: VerifyEmailDto) {
+	verifyEmail(@Query() verifyEmailDto: VerifyEmailDto) {
 		return this.authService.verifyEmail(verifyEmailDto.token);
 	}
 

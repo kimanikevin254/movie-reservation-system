@@ -46,8 +46,13 @@ export class CatchAllExceptionFilter implements ExceptionFilter {
 		const timestamp = new Date().toISOString();
 		const method = request.method;
 
+		const errorDetails =
+			exception instanceof HttpException
+				? exception.getResponse()
+				: exception;
+
 		// Custom colored log format
-		const logMessage = `${BOLD}${YELLOW}[${path}]${RESET} ${BOLD}${method} ${RED}${status} - ${message}${RESET}\n${YELLOW}Error details:${RESET} ${JSON.stringify(exception)}`;
+		const logMessage = `${BOLD}${YELLOW}[${path}]${RESET} ${BOLD}${method} ${RED}${status} - ${message}${RESET}\n${YELLOW}Error details:${RESET} ${JSON.stringify(errorDetails)}`;
 		this.logger.log(logMessage);
 
 		httpAdapter.reply(

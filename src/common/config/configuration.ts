@@ -31,7 +31,7 @@ export default registerAs<Config>('config', () => ({
 	mailFrom: process.env.MAIL_FROM_ADDRESS,
 	appName: process.env.APPLICATION_NAME,
 	frontendEmailVerificationLink:
-		process.env.FRONTEND_APPLICATION_EMAIL_VERIFICATION_LINK,
+		process.env.FRONTEND_APP_EMAIL_VERIFICATION_LINK,
 	frontendAppPwdResetLink: process.env.FRONTEND_APP_PASSWORD_RESET_LINK,
 	emailVerificationLinkTtlMins:
 		process.env.EMAIL_VERIFICATION_LINK_TTL_MINUTES,
