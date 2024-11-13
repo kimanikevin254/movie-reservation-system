@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { minutes, ThrottlerModule } from '@nestjs/throttler';
 import configuration from 'src/common/config/configuration';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
@@ -27,6 +28,12 @@ import { UserModule } from './user/user.module';
 			global: true,
 			secret: process.env.JWT_ACCESS_SECRET,
 		}),
+		ThrottlerModule.forRoot([
+			{
+				ttl: minutes(5),
+				limit: 10,
+			},
+		]),
 		AuthModule,
 		UserModule,
 		CommonModule,

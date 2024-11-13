@@ -31,9 +31,16 @@ export class AuthService {
 	}
 
 	private async generateTokens(userId: string) {
+		const accessTokenTtlMins = parseInt(
+			this.configService.get<string>('config.accessTokenTtlMins'),
+		);
+		const refreshTokenTtlMins = parseInt(
+			this.configService.get<string>('config.refreshTokenTtlMins'),
+		);
+
 		const accessToken = await this.jwtService.signAsync(
 			{ sub: userId },
-			{ expiresIn: '1h' },
+			{ expiresIn: accessTokenTtlMins * 60 }, // in secs
 		);
 
 		const refreshToken = randomBytes(32).toString('hex');
@@ -43,7 +50,9 @@ export class AuthService {
 			data: {
 				token: refreshToken,
 				userId,
-				expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+				expiresAt: new Date(
+					Date.now() + refreshTokenTtlMins * 60 * 1000, // In ms
+				),
 			},
 		});
 

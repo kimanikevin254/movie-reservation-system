@@ -15,6 +15,8 @@ interface Config {
 	frontendAppPwdResetLink: string;
 	emailVerificationLinkTtlMins: string;
 	passwordResetLinkTtlMins: string;
+	accessTokenTtlMins: string;
+	refreshTokenTtlMins: string;
 }
 
 export default registerAs<Config>('config', () => ({
@@ -34,4 +36,6 @@ export default registerAs<Config>('config', () => ({
 	emailVerificationLinkTtlMins:
 		process.env.EMAIL_VERIFICATION_LINK_TTL_MINUTES,
 	passwordResetLinkTtlMins: process.env.PASSWORD_RESET_LINK_TTL_MINUTES,
+	accessTokenTtlMins: process.env.ACCESS_TOKEN_TTL_MINUTES,
+	refreshTokenTtlMins: process.env.REFRESH_TOKEN_TTL_MINUTES,
 }));

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { User } from 'src/common/decorators/user.decorator';
 import { IUser } from 'src/common/interfaces/user.interface';
 import { AuthService } from './auth.service';
@@ -13,8 +14,9 @@ import { SignUpDto } from './dto/signup.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { AuthGuard } from './guards/auth.guard';
 
-@ApiTags('auth')
 @Controller('auth')
+@ApiTags('auth')
+@UseGuards(ThrottlerGuard)
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
