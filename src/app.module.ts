@@ -14,6 +14,7 @@ import { UserModule } from './user/user.module';
 			isGlobal: true,
 			load: [configuration],
 		}),
+		CommonModule,
 		// JwtModule.registerAsync({
 		// 	useFactory: async (configService: ConfigService) => {
 		// 		console.log('JwtModule useFactory called');
@@ -26,7 +27,7 @@ import { UserModule } from './user/user.module';
 		// }),
 		JwtModule.register({
 			global: true,
-			secret: process.env.JWT_ACCESS_SECRET,
+			secret: process.env.JWT_SECRET,
 		}),
 		ThrottlerModule.forRoot([
 			{
@@ -36,7 +37,6 @@ import { UserModule } from './user/user.module';
 		]),
 		AuthModule,
 		UserModule,
-		CommonModule,
 	],
 	controllers: [AppController],
 	providers: [],

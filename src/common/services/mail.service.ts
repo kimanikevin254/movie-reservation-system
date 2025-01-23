@@ -18,14 +18,15 @@ export class MailService {
 		private emailTemplateService: EmailTemplateService,
 	) {
 		// Initialize environment variables in constructor
-		this.MAILGUN_KEY = this.configService.get<string>(
-			'config.mailgun.apiKey',
+		this.MAILGUN_KEY = this.configService.getOrThrow<string>(
+			'config.mail.mailgunApiKey',
 		);
-		this.MAILGUN_DOMAIN = this.configService.get<string>(
-			'config.mailgun.domain',
+		this.MAILGUN_DOMAIN = this.configService.getOrThrow<string>(
+			'config.mail.mailgunDomain',
 		);
-		this.MAIL_FROM = this.configService.get<string>('config.mailFrom');
-		this.APP_NAME = this.configService.get<string>('config.appName');
+		this.MAIL_FROM =
+			this.configService.getOrThrow<string>('config.mail.from');
+		this.APP_NAME = this.configService.getOrThrow<string>('config.appName');
 
 		// Initialize Mailgun client
 		const mailgun = new Mailgun(FormData);

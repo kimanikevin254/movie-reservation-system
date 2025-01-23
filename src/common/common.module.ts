@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { DatabaseModule } from './database/database.module';
 import { EmailTemplateService } from './services/email-template.service';
 import { MailService } from './services/mail.service';
-import { PrismaService } from './services/prisma.service';
 
+@Global()
 @Module({
-	providers: [MailService, PrismaService, EmailTemplateService],
-	exports: [MailService, PrismaService],
+	imports: [DatabaseModule],
+	providers: [MailService, EmailTemplateService],
+	exports: [MailService],
 })
 export class CommonModule {}

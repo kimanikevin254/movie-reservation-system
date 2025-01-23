@@ -1,41 +1,66 @@
 import { registerAs } from '@nestjs/config';
+import { DatabaseType } from 'typeorm';
 
 interface Config {
-	database: {
-		uri: string;
+	db: {
+		type: DatabaseType;
+		host: string;
+		port: number;
+		username: string;
+		password: string;
+		database: string;
 	};
-	jwtSecret: string;
-	mailgun: {
-		domain: string;
-		apiKey: string;
+	auth: {
+		jwtSecret: string;
+		jwtTtl: number;
+		refreshTtl: number;
 	};
-	mailFrom: string;
+	mail: {
+		mailgunDomain: string;
+		mailgunApiKey: string;
+		from: string;
+		links: {
+			emailVerification: string;
+			passwordReset: string;
+		};
+		linksTtl: {
+			verification: number;
+			passwordReset: number;
+		};
+	};
 	appName: string;
-	frontendEmailVerificationLink: string;
-	frontendAppPwdResetLink: string;
-	emailVerificationLinkTtlMins: string;
-	passwordResetLinkTtlMins: string;
-	accessTokenTtlMins: string;
-	refreshTokenTtlMins: string;
 }
 
 export default registerAs<Config>('config', () => ({
-	database: {
-		uri: process.env.DATABASE_URL,
+	db: {
+		type: process.env.DB_TYPE as DatabaseType,
+		host: process.env.DB_HOST,
+		port: parseInt(process.env.DB_PORT),
+		username: process.env.DB_USERNAME,
+		password: process.env.DB_PASSWORD,
+		database: process.env.DB_DATABASE,
 	},
-	jwtSecret: process.env.JWT_ACCESS_SECRET,
-	mailgun: {
-		domain: process.env.MAILGUN_DOMAIN,
-		apiKey: process.env.MAILGUN_API_KEY,
+	auth: {
+		jwtSecret: process.env.JWT_SECRET,
+		jwtTtl: parseInt(process.env.Jwt_TTL_MINUTES),
+		refreshTtl: parseInt(process.env.REFRESH_TTL_MINUTES),
 	},
-	mailFrom: process.env.MAIL_FROM_ADDRESS,
+	mail: {
+		mailgunDomain: process.env.MAILGUN_DOMAIN,
+		mailgunApiKey: process.env.MAILGUN_API_KEY,
+		from: process.env.MAIL_FROM_ADDRESS,
+		links: {
+			emailVerification: process.env.EMAIL_VERIFICATION_LINK,
+			passwordReset: process.env.PASSWORD_RESET_LINK,
+		},
+		linksTtl: {
+			verification: parseInt(
+				process.env.EMAIL_VERIFICATION_LINK_TTL_MINUTES,
+			),
+			passwordReset: parseInt(
+				process.env.PASSWORD_RESET_LINK_TTL_MINUTES,
+			),
+		},
+	},
 	appName: process.env.APPLICATION_NAME,
-	frontendEmailVerificationLink:
-		process.env.FRONTEND_APP_EMAIL_VERIFICATION_LINK,
-	frontendAppPwdResetLink: process.env.FRONTEND_APP_PASSWORD_RESET_LINK,
-	emailVerificationLinkTtlMins:
-		process.env.EMAIL_VERIFICATION_LINK_TTL_MINUTES,
-	passwordResetLinkTtlMins: process.env.PASSWORD_RESET_LINK_TTL_MINUTES,
-	accessTokenTtlMins: process.env.ACCESS_TOKEN_TTL_MINUTES,
-	refreshTokenTtlMins: process.env.REFRESH_TOKEN_TTL_MINUTES,
 }));
