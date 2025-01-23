@@ -7,10 +7,17 @@ import { EmailVerificationToken } from './entities/email-verification-token.enti
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
+import { PasswordResetTokenRepository } from './repositories/password-reset-token.repository';
+import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 
 @Module({
 	controllers: [AuthController],
-	providers: [AuthService, EmailVerificationTokenRepository],
+	providers: [
+		AuthService,
+		EmailVerificationTokenRepository,
+		RefreshTokenRepository,
+		PasswordResetTokenRepository,
+	],
 	imports: [
 		UserModule,
 		TypeOrmModule.forFeature([
