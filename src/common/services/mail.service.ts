@@ -36,36 +36,13 @@ export class MailService {
 		});
 	}
 
-	async sendPasswordResetMail(to: string, name: string, resetLink: string) {
-		const htmlContent =
-			await this.emailTemplateService.passwordResetTemplate(
-				name.split(' ')[0],
-				resetLink,
-			);
+	async sendMagicLink(email: string, link: string) {
+		const htmlContent = await this.emailTemplateService.sendMagicLink(link);
 
 		return await this.mailgunClient.messages.create(this.MAILGUN_DOMAIN, {
 			from: this.MAIL_FROM,
-			to,
-			subject: 'Password Reset Request',
-			html: htmlContent,
-		});
-	}
-
-	async sendEmailVerification(
-		to: string,
-		name: string,
-		verificationLink: string,
-	) {
-		const htmlContent =
-			await this.emailTemplateService.verificationEmailTemplate(
-				name.split(' ')[0],
-				verificationLink,
-			);
-
-		return await this.mailgunClient.messages.create(this.MAILGUN_DOMAIN, {
-			from: this.MAIL_FROM,
-			to,
-			subject: 'Email Verification',
+			to: email,
+			subject: `Continue to ${this.APP_NAME}`,
 			html: htmlContent,
 		});
 	}

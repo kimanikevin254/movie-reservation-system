@@ -1,14 +1,7 @@
-import {
-	forwardRef,
-	HttpException,
-	HttpStatus,
-	Inject,
-	Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes } from 'crypto';
-import { Request, Response } from 'express';
 import { IUser } from 'src/common/interfaces/user.interface';
 import { MailService } from 'src/common/services/mail.service';
 import { UserService } from 'src/user/user.service';
@@ -18,7 +11,6 @@ import { RefreshTokensDto } from './dto/refresh-tokens.dto';
 import { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
 import { PasswordResetTokenRepository } from './repositories/password-reset-token.repository';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
-import { MagicLogin } from './strategies/magic-login.strategy';
 
 @Injectable()
 export class AuthService {
@@ -27,8 +19,6 @@ export class AuthService {
 		private jwtService: JwtService,
 		private mailService: MailService,
 		private configService: ConfigService,
-		@Inject(forwardRef(() => MagicLogin))
-		private readonly magicLogin: MagicLogin,
 		private readonly emailVerificationTokenRepository: EmailVerificationTokenRepository,
 		private readonly refreshTokenRepository: RefreshTokenRepository,
 		private readonly passwordResetTokenRepository: PasswordResetTokenRepository,
@@ -67,15 +57,6 @@ export class AuthService {
 		} catch (error) {
 			throw error;
 		}
-	}
-
-	async magicLink(req: Request, res: Response) {
-		const result = await this.magicLogin.send(req, res);
-		console.log(result);
-		return {
-			message:
-				'We have sent you an email with instructions to complete the process. Please check your inbox (and spam/junk folder) for the email and follow the steps provided.',
-		};
 	}
 
 	async handleMagicLink(email: string) {

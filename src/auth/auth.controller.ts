@@ -18,7 +18,7 @@ import { CompleteSignUpDto } from './dto/complete-signup.dto';
 import { LogOutDto } from './dto/logOut.dto';
 import { RefreshTokensDto } from './dto/refresh-tokens.dto';
 import { AuthGuard } from './guards/auth.guard';
-import { MagicLogin } from './strategies/magic-login.strategy';
+import { MagicLoginStrategy } from './strategies/magic-login.strategy';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -26,7 +26,7 @@ import { MagicLogin } from './strategies/magic-login.strategy';
 export class AuthController {
 	constructor(
 		private readonly authService: AuthService,
-		private readonly magicLogin: MagicLogin,
+		private readonly magicLoginMagicLoginStrategy: MagicLoginStrategy,
 	) {}
 
 	@Post('/magic-login')
@@ -36,7 +36,7 @@ export class AuthController {
 			"Initiates the magic link login process, sending a magic login link to the user's email address.",
 	})
 	magicLinkLogin(@Req() req: Request, @Res() res: Response) {
-		return this.authService.magicLink(req, res);
+		return this.magicLoginMagicLoginStrategy.send(req, res);
 	}
 
 	@UseGuards(PassportAuthGuard('magiclogin'))

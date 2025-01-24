@@ -1,33 +1,37 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import MagicLoginStrategy from 'passport-magic-login';
+import Strategy from 'passport-magic-login';
+import { MailService } from 'src/common/services/mail.service';
 import { AuthService } from '../auth.service';
 
 @Injectable()
-export class MagicLogin extends PassportStrategy(MagicLoginStrategy) {
+export class MagicLoginStrategy extends PassportStrategy(Strategy) {
 	constructor(
-		@Inject(forwardRef(() => AuthService))
 		private readonly authService: AuthService,
+		private readonly mailService: MailService,
+		private configService: ConfigService,
 	) {
 		super({
-			secret: 'MySupersecre+!',
-			callbackUrl: '/auth/magiclogin/callback',
-			async sendMagicLink(destination, href) {
-				// TODO: Send email to user
-				console.log(
-					`Hello ${destination}, click this link to finish logging in: https://yourcompany.com${href}`,
-				);
+			secret: configService.getOrThrow('config.auth.magicLinkSecret'),
+			callbackUrl: configService.getOrThrow(
+				'config.mail.links.magicLinkCallback',
+			),
+			sendMagicLink: async (destination, href) => {
+				return this.mailService.sendMagicLink(destination, href);
 			},
 			verify: (payload, verifyCallback) => {
-				return verifyCallback(null, this.validate(payload));
+				return verifyCallback(null, this.validate(payload.destination));
 			},
 			jwtOptions: {
-				expiresIn: '5000',
+				expiresIn: `${configService.getOrThrow(
+					'config.mail.linksTtl.magicLink',
+				)}m`,
 			},
 		});
 	}
 
-	validate(payload: { destination: string }): unknown {
-		return this.authService.handleMagicLink(payload.destination);
+	validate(destination: string): unknown {
+		return this.authService.handleMagicLink(destination);
 	}
 }

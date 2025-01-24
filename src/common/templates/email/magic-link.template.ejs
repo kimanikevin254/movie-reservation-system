@@ -1,0 +1,21 @@
+<div
+	style="font-family: Arial, sans-serif; color: #333; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px;">
+	<h2 style="color: #4CAF50;">Access Your Account</h2>
+	<p>Hello,</p>
+	<p>We received a request to access your account associated with this email address. Click the button below to
+		proceed:</p>
+	<a href="<%= magicLink %>"
+		style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-size: 16px; margin-top: 10px;">
+		Access Account
+	</a>
+	<p style="margin-top: 20px;">Or copy and paste this link into your browser:</p>
+	<p style="word-wrap: break-word; color: #4CAF50;">
+		<%= magicLink %>
+	</p>
+	<p>This link is valid for <%= linkTtl %> minutes.</p>
+	<p>If you did not make this request, you can safely ignore this email.</p>
+	<p style="margin-top: 20px;">Thank you,<br>The <%= appName %> Team</p>
+	<hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
+	<p style="font-size: 12px; color: #999; text-align: center;">This email was sent by <%= appName %>. If you have any
+			questions, please contact our support team.</p>
+</div>

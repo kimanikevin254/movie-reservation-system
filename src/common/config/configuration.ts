@@ -14,18 +14,17 @@ interface Config {
 		jwtSecret: string;
 		jwtTtl: number;
 		refreshTtl: number;
+		magicLinkSecret: string;
 	};
 	mail: {
 		mailgunDomain: string;
 		mailgunApiKey: string;
 		from: string;
 		links: {
-			emailVerification: string;
-			passwordReset: string;
+			magicLinkCallback: string;
 		};
 		linksTtl: {
-			verification: number;
-			passwordReset: number;
+			magicLink: number;
 		};
 	};
 	appName: string;
@@ -44,22 +43,17 @@ export default registerAs<Config>('config', () => ({
 		jwtSecret: process.env.JWT_SECRET,
 		jwtTtl: parseInt(process.env.Jwt_TTL_MINUTES),
 		refreshTtl: parseInt(process.env.REFRESH_TTL_MINUTES),
+		magicLinkSecret: process.env.MAGIC_LINK_SECRET,
 	},
 	mail: {
 		mailgunDomain: process.env.MAILGUN_DOMAIN,
 		mailgunApiKey: process.env.MAILGUN_API_KEY,
 		from: process.env.MAIL_FROM_ADDRESS,
 		links: {
-			emailVerification: process.env.EMAIL_VERIFICATION_LINK,
-			passwordReset: process.env.PASSWORD_RESET_LINK,
+			magicLinkCallback: process.env.MAGIC_LINK_CALLBACK,
 		},
 		linksTtl: {
-			verification: parseInt(
-				process.env.EMAIL_VERIFICATION_LINK_TTL_MINUTES,
-			),
-			passwordReset: parseInt(
-				process.env.PASSWORD_RESET_LINK_TTL_MINUTES,
-			),
+			magicLink: parseInt(process.env.MAGIC_LINK_TTL_MINS),
 		},
 	},
 	appName: process.env.APPLICATION_NAME,
