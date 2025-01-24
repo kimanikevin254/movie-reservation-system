@@ -52,9 +52,9 @@ export class CatchAllExceptionFilter implements ExceptionFilter {
 				: exception;
 
 		const stringifiedException =
-			JSON.stringify(exception) === '{}'
-				? exception
-				: JSON.stringify(exception);
+			JSON.stringify(errorDetails) === '{}'
+				? errorDetails
+				: JSON.stringify(errorDetails);
 
 		// Custom colored log format
 		const logMessage = `${BOLD}${YELLOW}[${path}]${RESET} ${BOLD}${method} ${RED}${status} - ${message}${RESET}\n${YELLOW}Error details:${RESET} ${stringifiedException}`;
