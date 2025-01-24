@@ -18,29 +18,12 @@ export class UserService {
 	}
 
 	async profile(userId: string) {
-		const user = await this.userRepository.findById(userId);
-
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { passwordHash, ...rest } = user;
-
-		return rest;
+		return this.userRepository.findById(userId);
 	}
 
 	async create(data: Partial<User>) {
-		// Check if user exists
-		const user = await this.userRepository.findByEmail(data.email);
-
-		if (user) {
-			throw new HttpException(
-				'This email address is already registered',
-				HttpStatus.BAD_REQUEST,
-			);
-		}
-
 		const newUser = this.userRepository.create({
 			name: data.name,
-			email: data.email,
-			passwordHash: data.passwordHash,
 		});
 
 		return this.userRepository.save(newUser);

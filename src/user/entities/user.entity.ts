@@ -6,17 +6,11 @@ import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity()
 export class User extends BaseEntity {
-	@Column()
+	@Column({ nullable: true })
 	name: string;
 
 	@Column()
 	email: string;
-
-	@Column()
-	passwordHash: string;
-
-	@Column({ type: 'timestamptz', nullable: true })
-	emailVerifiedAt: Date;
 
 	@OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
 	refreshTokens: RefreshToken[];

@@ -1,20 +1,24 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+	forwardRef,
+	HttpException,
+	HttpStatus,
+	Inject,
+	Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
+import { Request, Response } from 'express';
+import { IUser } from 'src/common/interfaces/user.interface';
 import { MailService } from 'src/common/services/mail.service';
 import { UserService } from 'src/user/user.service';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { ForgetPasswordDto } from './dto/forget-password.dto';
-import { LogInDto } from './dto/login.dto';
+import { CompleteSignUpDto } from './dto/complete-signup.dto';
 import { LogOutDto } from './dto/logOut.dto';
 import { RefreshTokensDto } from './dto/refresh-tokens.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { SignUpDto } from './dto/signup.dto';
 import { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
 import { PasswordResetTokenRepository } from './repositories/password-reset-token.repository';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
+import { MagicLogin } from './strategies/magic-login.strategy';
 
 @Injectable()
 export class AuthService {
@@ -23,15 +27,12 @@ export class AuthService {
 		private jwtService: JwtService,
 		private mailService: MailService,
 		private configService: ConfigService,
+		@Inject(forwardRef(() => MagicLogin))
+		private readonly magicLogin: MagicLogin,
 		private readonly emailVerificationTokenRepository: EmailVerificationTokenRepository,
 		private readonly refreshTokenRepository: RefreshTokenRepository,
 		private readonly passwordResetTokenRepository: PasswordResetTokenRepository,
 	) {}
-
-	private async hashPassword(password: string) {
-		const saltOrRounds = 10;
-		return await bcrypt.hash(password, saltOrRounds);
-	}
 
 	private async generateTokens(userId: string) {
 		try {
@@ -68,113 +69,38 @@ export class AuthService {
 		}
 	}
 
-	async signup(signUpDto: SignUpDto) {
-		try {
-			const passwordHash = await this.hashPassword(signUpDto.password);
-
-			const user = await this.userService.create({
-				name: signUpDto.name,
-				email: signUpDto.email,
-				passwordHash,
-			});
-
-			// Generate email verification token
-			const verificationToken = randomBytes(32).toString('hex');
-
-			// Save the token
-			const newVerificationToken =
-				this.emailVerificationTokenRepository.create({
-					token: verificationToken,
-					user,
-					expiresAt: new Date(
-						Date.now() +
-							this.configService.getOrThrow<number>(
-								'config.mail.linksTtl.verification',
-							) *
-								60 *
-								1000,
-					),
-				});
-
-			await this.emailVerificationTokenRepository.save(
-				newVerificationToken,
-			);
-
-			// Send a email verification link
-			await this.mailService.sendEmailVerification(
-				user.email,
-				user.name,
-				`${this.configService.get<string>(
-					'config.mail.links.emailVerification',
-				)}?token=${verificationToken}`,
-			);
-
-			return {
-				message:
-					'Click the link sent to the provided email address to verify your account',
-			};
-		} catch (error) {
-			throw error;
-		}
-	}
-
-	async verifyEmail(token: string) {
-		// Check if token is valid
-		const validToken =
-			await this.emailVerificationTokenRepository.findValidToken(token);
-
-		console.log(validToken);
-
-		if (!validToken) {
-			throw new HttpException('Invalid token', HttpStatus.BAD_REQUEST);
-		}
-
-		// Mark user's email as verified
-		await this.userService.updateUser(validToken.user.id, {
-			emailVerifiedAt: new Date(),
-		});
-
-		// Expire the token
-		await this.emailVerificationTokenRepository.update(
-			{
-				id: validToken.id,
-			},
-			{
-				expiresAt: new Date(),
-			},
-		);
-
-		// Generate tokens
-		const tokens = await this.generateTokens(validToken.user.id);
-
+	async magicLink(req: Request, res: Response) {
+		const result = await this.magicLogin.send(req, res);
+		console.log(result);
 		return {
-			tokens,
-			userId: validToken.user.id,
+			message:
+				'We have sent you an email with instructions to complete the process. Please check your inbox (and spam/junk folder) for the email and follow the steps provided.',
 		};
 	}
 
-	async login(logInDto: LogInDto) {
-		// Retrieve user
-		const user = await this.userService.findOneBy('email', logInDto.email);
+	async handleMagicLink(email: string) {
+		const payload: IUser = { id: undefined, next_action: 'sign_in' };
 
+		// Retrieve user
+		let user = await this.userService.findOneBy('email', email);
+
+		// If user does not exist, create them
 		if (!user) {
-			throw new HttpException(
-				'Incorrect credentials', // Don't tell the user that the user does not exist
-				HttpStatus.UNAUTHORIZED,
-			);
+			payload.next_action = 'complete_signup';
+			user = await this.userService.create({ email });
 		}
 
-		// Check if password matches
-		const passwordMatches = await bcrypt.compare(
-			logInDto.password,
-			user.passwordHash,
-		);
+		payload.id = user.id;
 
-		if (!passwordMatches) {
-			throw new HttpException(
-				'Incorrect credentials',
-				HttpStatus.UNAUTHORIZED,
-			);
+		return payload;
+	}
+
+	async loginOrCompleteSignup(user: IUser) {
+		if (user.next_action === 'complete_signup') {
+			return {
+				message:
+					'Registered successfully. Please provide the additional required information.',
+			};
 		}
 
 		// Generate tokens
@@ -184,6 +110,25 @@ export class AuthService {
 			tokens,
 			userId: user.id,
 		};
+	}
+
+	async signup(dto: CompleteSignUpDto) {
+		// Retrieve the user
+		const user = await this.userService.findOneBy('email', dto.email);
+
+		if (!user) {
+			throw new HttpException(
+				'You need to complete the magic link flow first',
+				HttpStatus.UNAUTHORIZED,
+			);
+		}
+
+		// Remove email from dto to avoid updating it
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { email, ...updates } = dto;
+
+		// Update details
+		await this.userService.updateUser(user.id, updates);
 	}
 
 	async refreshTokens(refreshTokensDto: RefreshTokensDto) {
@@ -224,123 +169,5 @@ export class AuthService {
 				{ expiresAt: new Date() },
 			);
 		} else return;
-	}
-
-	async changePassword(changePasswordDto: ChangePasswordDto, userId: string) {
-		const user = await this.userService.findOneBy('id', userId);
-
-		if (!user) {
-			throw new HttpException(
-				'User does not exist',
-				HttpStatus.NOT_FOUND,
-			);
-		}
-
-		// Check if user password is same as provided old password
-		const passwordMatches = await bcrypt.compare(
-			changePasswordDto.oldPassword,
-			user.passwordHash,
-		);
-
-		if (!passwordMatches) {
-			throw new HttpException(
-				'Passwords do not match',
-				HttpStatus.BAD_REQUEST,
-			);
-		}
-
-		const passwordHash = await this.hashPassword(
-			changePasswordDto.newPassword,
-		);
-
-		// Update user password
-		await this.userService.updateUser(userId, { passwordHash });
-
-		return {
-			message: 'Password updated successfully',
-		};
-	}
-
-	async forgetPassword(forgetPasswordDto: ForgetPasswordDto) {
-		try {
-			// Make sure user exists
-			const user = await this.userService.findOneBy(
-				'email',
-				forgetPasswordDto.email,
-			);
-
-			if (user) {
-				// Generate a password rest token
-				const passwordResetToken = randomBytes(32).toString('hex');
-
-				// Save the password reset token to db
-				const newPasswordResetToken =
-					this.passwordResetTokenRepository.create({
-						token: passwordResetToken,
-						user,
-						expiresAt: new Date(
-							Date.now() +
-								this.configService.getOrThrow<number>(
-									'config.mail.linksTtl.passwordReset',
-								) *
-									60 *
-									1000,
-						),
-					});
-
-				await this.passwordResetTokenRepository.save(
-					newPasswordResetToken,
-				);
-
-				// Send email
-				await this.mailService.sendPasswordResetMail(
-					forgetPasswordDto.email,
-					user.name,
-					`${this.configService.getOrThrow<string>('config.mail.links.passwordReset')}?token=${passwordResetToken}`,
-				);
-			}
-
-			return {
-				message:
-					'If this email address is registered, you will receive a password reset link.',
-			};
-		} catch (error) {
-			throw error;
-		}
-	}
-
-	async resetPassword(resetPasswordDto: ResetPasswordDto) {
-		// Check if token exists
-		const passwordResetToken =
-			await this.passwordResetTokenRepository.findValidToken(
-				resetPasswordDto.token,
-			);
-
-		if (!passwordResetToken) {
-			throw new HttpException(
-				'Invalid password reset token',
-				HttpStatus.BAD_REQUEST,
-			);
-		}
-
-		// Reset user's password
-		const hashedPassword = await this.hashPassword(
-			resetPasswordDto.password,
-		);
-
-		await this.userService.updateUser(passwordResetToken.user.id, {
-			passwordHash: hashedPassword,
-		});
-
-		// Invalidate the token
-		await this.passwordResetTokenRepository.update(
-			{ id: passwordResetToken.id },
-			{ expiresAt: new Date() },
-		);
-
-		return {
-			message:
-				'Password reset successfully. You can now log in with your new credentials',
-		};
 	}
 }

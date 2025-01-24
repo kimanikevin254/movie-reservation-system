@@ -9,10 +9,12 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
 import { PasswordResetTokenRepository } from './repositories/password-reset-token.repository';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
+import { MagicLogin } from './strategies/magic-login.strategy';
 
 @Module({
 	controllers: [AuthController],
 	providers: [
+		MagicLogin,
 		AuthService,
 		EmailVerificationTokenRepository,
 		RefreshTokenRepository,

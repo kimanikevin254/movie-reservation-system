@@ -1,51 +1,62 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Get,
+	Post,
+	Req,
+	Res,
+	UseGuards,
+} from '@nestjs/common';
+import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { Request, Response } from 'express';
 import { User } from 'src/common/decorators/user.decorator';
 import { IUser } from 'src/common/interfaces/user.interface';
 import { AuthService } from './auth.service';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { ForgetPasswordDto } from './dto/forget-password.dto';
-import { LogInDto } from './dto/login.dto';
+import { CompleteSignUpDto } from './dto/complete-signup.dto';
 import { LogOutDto } from './dto/logOut.dto';
 import { RefreshTokensDto } from './dto/refresh-tokens.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { SignUpDto } from './dto/signup.dto';
-import { VerifyEmailDto } from './dto/verify-email.dto';
 import { AuthGuard } from './guards/auth.guard';
+import { MagicLogin } from './strategies/magic-login.strategy';
 
 @Controller('auth')
 @ApiTags('auth')
 @UseGuards(ThrottlerGuard)
 export class AuthController {
-	constructor(private readonly authService: AuthService) {}
+	constructor(
+		private readonly authService: AuthService,
+		private readonly magicLogin: MagicLogin,
+	) {}
 
-	@Post('signup')
+	@Post('/magic-login')
 	@ApiOperation({
-		summary: 'User Signup',
-		description: 'Registers a new user with a name, email, and password.',
-	})
-	signup(@Body() signUpDto: SignUpDto) {
-		return this.authService.signup(signUpDto);
-	}
-
-	@Get('verify-email')
-	@ApiOperation({
-		summary: 'Verify email',
-		description: 'Verifies user email and return auth tokens.',
-	})
-	verifyEmail(@Query() verifyEmailDto: VerifyEmailDto) {
-		return this.authService.verifyEmail(verifyEmailDto.token);
-	}
-
-	@Post('login')
-	@ApiOperation({
-		summary: 'User Login',
+		summary: 'Magic Link Login',
 		description:
-			'Logs in a user with an email and password, returning a token.',
+			"Initiates the magic link login process, sending a magic login link to the user's email address.",
 	})
-	login(@Body() logInDto: LogInDto) {
-		return this.authService.login(logInDto);
+	magicLinkLogin(@Req() req: Request, @Res() res: Response) {
+		return this.authService.magicLink(req, res);
+	}
+
+	@UseGuards(PassportAuthGuard('magiclogin'))
+	@Get('/magic-login/callback')
+	@ApiOperation({
+		summary: 'Magic Link Login Callback',
+		description:
+			'Handles the callback from the magic link login, allowing the user to log in or complete the signup process.',
+	})
+	magicLinkLoginCallback(@User() user: IUser) {
+		return this.authService.loginOrCompleteSignup(user);
+	}
+
+	@Post('complete-signup')
+	@ApiOperation({
+		summary: 'Complete Signup',
+		description: 'Completes the signup process by updating the name, etc.',
+	})
+	completeSignup(@Body() dto: CompleteSignUpDto) {
+		return this.authService.signup(dto);
 	}
 
 	@Post('refresh-token')
@@ -67,41 +78,5 @@ export class AuthController {
 	@UseGuards(AuthGuard)
 	logout(@Body() logOutDto: LogOutDto) {
 		return this.authService.logOut(logOutDto);
-	}
-
-	@Post('change-password')
-	@ApiOperation({
-		summary: 'Change Password',
-		description: 'Allows an authenticated user to change their password.',
-	})
-	@ApiBearerAuth()
-	@UseGuards(AuthGuard)
-	changePassword(
-		@Body() changePasswordDto: ChangePasswordDto,
-		@User() user: IUser,
-	) {
-		return this.authService.changePassword(changePasswordDto, user.id);
-	}
-
-	@Post('forget-password')
-	@ApiOperation({
-		summary: 'Forget Password',
-		description:
-			'Initiates the password reset process by sending a reset token.',
-	})
-	forgetPasswordPassword(
-		@Body() forgetPasswordPasswordDto: ForgetPasswordDto,
-	) {
-		return this.authService.forgetPassword(forgetPasswordPasswordDto);
-	}
-
-	@Post('reset-password')
-	@ApiOperation({
-		summary: 'Reset Password',
-		description:
-			"Resets the user's password using a token sent to their email.",
-	})
-	resetPasswordPassword(@Body() resetPasswordPasswordDto: ResetPasswordDto) {
-		return this.authService.resetPassword(resetPasswordPasswordDto);
 	}
 }
