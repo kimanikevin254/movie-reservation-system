@@ -52,7 +52,7 @@ export class CatchAllExceptionFilter implements ExceptionFilter {
 				: exception;
 
 		// Custom colored log format
-		const logMessage = `${BOLD}${YELLOW}[${path}]${RESET} ${BOLD}${method} ${RED}${status} - ${message}${RESET}\n${YELLOW}Error details:${RESET} ${JSON.stringify(errorDetails)}`;
+		const logMessage = `${BOLD}${YELLOW}[${path}]${RESET} ${BOLD}${method} ${RED}${status} - ${message}${RESET}\n${YELLOW}Error details:${RESET} ${errorDetails}`;
 		this.logger.log(logMessage);
 
 		httpAdapter.reply(

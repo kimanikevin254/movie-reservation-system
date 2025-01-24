@@ -12,11 +12,12 @@ export class EmailTemplateService {
 
 	constructor(private configService: ConfigService) {
 		this.APP_NAME = this.configService.get<string>('config.appName');
-		this.EMAIL_VERIFICATION_LINK_TTL = this.configService.get<string>(
-			'config.emailVerificationLinkTtlMins',
-		);
-		this.PASSWORD_RESET_LINK_TTL = this.configService.get<string>(
-			'config.passwordResetLinkTtlMins',
+		this.EMAIL_VERIFICATION_LINK_TTL =
+			this.configService.getOrThrow<string>(
+				'config.mail.linksTtl.verification',
+			);
+		this.PASSWORD_RESET_LINK_TTL = this.configService.getOrThrow<string>(
+			'config.mail.linksTtl.passwordReset',
 		);
 	}
 

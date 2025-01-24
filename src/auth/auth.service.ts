@@ -119,48 +119,38 @@ export class AuthService {
 	}
 
 	async verifyEmail(token: string) {
-		try {
-			// Check if token is valid
-			const validToken =
-				await this.emailVerificationTokenRepository.findValidToken(
-					token,
-				);
+		// Check if token is valid
+		const validToken =
+			await this.emailVerificationTokenRepository.findValidToken(token);
 
-			console.log(validToken);
+		console.log(validToken);
 
-			if (!validToken) {
-				throw new HttpException(
-					'Invalid token',
-					HttpStatus.BAD_REQUEST,
-				);
-			}
-
-			// Mark user's email as verified
-			await this.userService.updateUser(validToken.user.id, {
-				emailVerifiedAt: new Date(),
-			});
-
-			// Expire the token
-			await this.emailVerificationTokenRepository.update(
-				{
-					id: validToken.id,
-				},
-				{
-					expiresAt: new Date(),
-				},
-			);
-
-			// Generate tokens
-			const tokens = await this.generateTokens(validToken.user.id);
-
-			return {
-				tokens,
-				userId: validToken.user.id,
-			};
-		} catch (error) {
-			console.log(error);
-			throw error;
+		if (!validToken) {
+			throw new HttpException('Invalid token', HttpStatus.BAD_REQUEST);
 		}
+
+		// Mark user's email as verified
+		await this.userService.updateUser(validToken.user.id, {
+			emailVerifiedAt: new Date(),
+		});
+
+		// Expire the token
+		await this.emailVerificationTokenRepository.update(
+			{
+				id: validToken.id,
+			},
+			{
+				expiresAt: new Date(),
+			},
+		);
+
+		// Generate tokens
+		const tokens = await this.generateTokens(validToken.user.id);
+
+		return {
+			tokens,
+			userId: validToken.user.id,
+		};
 	}
 
 	async login(logInDto: LogInDto) {
@@ -272,45 +262,51 @@ export class AuthService {
 	}
 
 	async forgetPassword(forgetPasswordDto: ForgetPasswordDto) {
-		// Make sure user exists
-		const user = await this.userService.findOneBy(
-			'email',
-			forgetPasswordDto.email,
-		);
-
-		if (user) {
-			// Generate a password rest token
-			const passwordResetToken = randomBytes(32).toString('hex');
-
-			// Save the password reset token to db
-			const newPasswordResetToken =
-				this.passwordResetTokenRepository.create({
-					token: passwordResetToken,
-					user,
-					expiresAt: new Date(
-						Date.now() +
-							this.configService.getOrThrow<number>(
-								'config.mail.linksTtl.passwordReset',
-							) *
-								60 *
-								1000,
-					),
-				});
-
-			await this.passwordResetTokenRepository.save(newPasswordResetToken);
-
-			// Send email
-			await this.mailService.sendPasswordResetMail(
+		try {
+			// Make sure user exists
+			const user = await this.userService.findOneBy(
+				'email',
 				forgetPasswordDto.email,
-				user.name,
-				`${this.configService.get<string>('config.frontendAppPwdResetLink')}?token=${passwordResetToken}`,
 			);
-		}
 
-		return {
-			message:
-				'If this email address is registered, you will receive a password reset link.',
-		};
+			if (user) {
+				// Generate a password rest token
+				const passwordResetToken = randomBytes(32).toString('hex');
+
+				// Save the password reset token to db
+				const newPasswordResetToken =
+					this.passwordResetTokenRepository.create({
+						token: passwordResetToken,
+						user,
+						expiresAt: new Date(
+							Date.now() +
+								this.configService.getOrThrow<number>(
+									'config.mail.linksTtl.passwordReset',
+								) *
+									60 *
+									1000,
+						),
+					});
+
+				await this.passwordResetTokenRepository.save(
+					newPasswordResetToken,
+				);
+
+				// Send email
+				await this.mailService.sendPasswordResetMail(
+					forgetPasswordDto.email,
+					user.name,
+					`${this.configService.getOrThrow<string>('config.mail.links.passwordReset')}?token=${passwordResetToken}`,
+				);
+			}
+
+			return {
+				message:
+					'If this email address is registered, you will receive a password reset link.',
+			};
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	async resetPassword(resetPasswordDto: ResetPasswordDto) {
