@@ -79,6 +79,7 @@ export class AuthService {
 	async loginOrCompleteSignup(user: IUser) {
 		if (user.next_action === 'complete_signup') {
 			return {
+				userId: user.id,
 				message:
 					'Registered successfully. Please provide the additional required information.',
 			};
@@ -95,21 +96,29 @@ export class AuthService {
 
 	async signup(dto: CompleteSignUpDto) {
 		// Retrieve the user
-		const user = await this.userService.findOneBy('email', dto.email);
+		const user = await this.userService.findOneBy('id', dto.userId);
 
 		if (!user) {
 			throw new HttpException(
-				'You need to complete the magic link flow first',
+				'Unauthorized. You need to complete the magic link flow first',
 				HttpStatus.UNAUTHORIZED,
 			);
 		}
 
-		// Remove email from dto to avoid updating it
+		// Remove userId from dto to avoid updating it
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { email, ...updates } = dto;
+		const { userId, ...updates } = dto;
 
 		// Update details
 		await this.userService.updateUser(user.id, updates);
+
+		// Generate tokens
+		const tokens = await this.generateTokens(user.id);
+
+		return {
+			tokens,
+			userId: user.id,
+		};
 	}
 
 	async refreshTokens(refreshTokensDto: RefreshTokensDto) {

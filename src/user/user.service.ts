@@ -23,7 +23,7 @@ export class UserService {
 
 	async create(data: Partial<User>) {
 		const newUser = this.userRepository.create({
-			name: data.name,
+			email: data.email,
 		});
 
 		return this.userRepository.save(newUser);
