@@ -3,13 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes } from 'crypto';
 import { IUser } from 'src/common/interfaces/user.interface';
-import { MailService } from 'src/common/services/mail.service';
 import { UserService } from 'src/user/user.service';
 import { CompleteSignUpDto } from './dto/complete-signup.dto';
 import { LogOutDto } from './dto/logOut.dto';
 import { RefreshTokensDto } from './dto/refresh-tokens.dto';
-import { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
-import { PasswordResetTokenRepository } from './repositories/password-reset-token.repository';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 
 @Injectable()
@@ -17,11 +14,8 @@ export class AuthService {
 	constructor(
 		private userService: UserService,
 		private jwtService: JwtService,
-		private mailService: MailService,
 		private configService: ConfigService,
-		private readonly emailVerificationTokenRepository: EmailVerificationTokenRepository,
 		private readonly refreshTokenRepository: RefreshTokenRepository,
-		private readonly passwordResetTokenRepository: PasswordResetTokenRepository,
 	) {}
 
 	private async generateTokens(userId: string) {
