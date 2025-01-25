@@ -42,6 +42,10 @@ export class TheatreService {
 		return this.theatreRepository.findOne({ where: { id } });
 	}
 
+	findUserTheatre(userId: string, theatreId: string) {
+		return this.theatreRepository.findUserTheatre(userId, theatreId);
+	}
+
 	async update(userId: string, theatreId: string, dto: UpdateTheatreDto) {
 		// Make sure user owns theatre
 		const theatre = await this.theatreRepository.findUserTheatre(

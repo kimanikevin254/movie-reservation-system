@@ -10,5 +10,6 @@ import { TheatreService } from './theatre.service';
 	controllers: [TheatreController],
 	providers: [TheatreService, TheatreRepository],
 	imports: [TypeOrmModule.forFeature([Theatre]), UserModule],
+	exports: [TheatreService],
 })
 export class TheatreModule {}

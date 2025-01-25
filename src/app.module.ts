@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { TheatreModule } from './theatre/theatre.module';
 import { UserModule } from './user/user.module';
+import { AuditoriumModule } from './auditorium/auditorium.module';
 
 @Module({
 	imports: [
@@ -39,6 +40,7 @@ import { UserModule } from './user/user.module';
 		AuthModule,
 		UserModule,
 		TheatreModule,
+		AuditoriumModule,
 	],
 	controllers: [AppController],
 	providers: [],
