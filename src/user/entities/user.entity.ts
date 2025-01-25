@@ -2,6 +2,7 @@ import { EmailVerificationToken } from 'src/auth/entities/email-verification-tok
 import { PasswordResetToken } from 'src/auth/entities/password-reset-token.entity';
 import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 import { BaseEntity } from 'src/common/database/base.entity';
+import { Theatre } from 'src/theatre/entities/theatre.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity()
@@ -26,4 +27,7 @@ export class User extends BaseEntity {
 		(emailVerificationToken) => emailVerificationToken.user,
 	)
 	emailVerificationTokens: EmailVerificationToken[];
+
+	@OneToMany(() => Theatre, (theatre) => theatre.user)
+	theatres: Theatre[];
 }

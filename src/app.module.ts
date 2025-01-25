@@ -6,6 +6,7 @@ import configuration from 'src/common/config/configuration';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
+import { TheatreModule } from './theatre/theatre.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -37,6 +38,7 @@ import { UserModule } from './user/user.module';
 		]),
 		AuthModule,
 		UserModule,
+		TheatreModule,
 	],
 	controllers: [AppController],
 	providers: [],
