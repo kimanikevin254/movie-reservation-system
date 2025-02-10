@@ -36,12 +36,14 @@ export class MailService {
 		});
 	}
 
-	async sendMagicLink(email: string, link: string) {
-		const htmlContent = await this.emailTemplateService.sendMagicLink(link);
+	async sendMagicLink(data: { destination: string; href: string }) {
+		const htmlContent = await this.emailTemplateService.sendMagicLink(
+			data.href,
+		);
 
 		return await this.mailgunClient.messages.create(this.MAILGUN_DOMAIN, {
 			from: this.MAIL_FROM,
-			to: email,
+			to: data.destination,
 			subject: `Continue to ${this.APP_NAME}`,
 			html: htmlContent,
 		});

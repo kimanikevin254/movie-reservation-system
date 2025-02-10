@@ -27,6 +27,10 @@ interface Config {
 			magicLink: number;
 		};
 	};
+	redis: {
+		host: string;
+		port: number;
+	};
 	appName: string;
 }
 
@@ -84,6 +88,10 @@ export default registerAs<Config>('config', () => {
 			linksTtl: {
 				magicLink: parseInt(process.env.MAGIC_LINK_TTL_MINS),
 			},
+		},
+		redis: {
+			host: process.env.REDIS_HOST,
+			port: parseInt(process.env.REDIS_PORT),
 		},
 		appName: process.env.APPLICATION_NAME,
 	};

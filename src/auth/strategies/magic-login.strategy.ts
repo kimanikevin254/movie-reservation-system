@@ -1,6 +1,8 @@
+import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
+import { Queue } from 'bullmq';
 import Strategy from 'passport-magic-login';
 import { MailService } from 'src/common/services/mail.service';
 import { AuthService } from '../auth.service';
@@ -11,6 +13,8 @@ export class MagicLoginStrategy extends PassportStrategy(Strategy) {
 		private readonly authService: AuthService,
 		private readonly mailService: MailService,
 		private configService: ConfigService,
+		@InjectQueue('auth-mail')
+		private readonly authEmailQueue: Queue,
 	) {
 		super({
 			secret: configService.getOrThrow('config.auth.magicLinkSecret'),
@@ -18,7 +22,12 @@ export class MagicLoginStrategy extends PassportStrategy(Strategy) {
 				'config.mail.links.magicLinkCallback',
 			),
 			sendMagicLink: async (destination, href) => {
-				return this.mailService.sendMagicLink(destination, href);
+				await this.authEmailQueue.add('send-mail', {
+					destination,
+					href,
+				});
+
+				return;
 			},
 			verify: (payload, verifyCallback) => {
 				return verifyCallback(null, this.validate(payload.destination));
