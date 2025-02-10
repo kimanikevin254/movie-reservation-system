@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
 	ArrayNotEmpty,
@@ -78,14 +79,53 @@ export class RowDto {
 }
 
 export class CreateAuditoriumDto {
+	@ApiProperty({
+		description: 'The name of the auditorium',
+		example: 'Auditorium 1',
+	})
 	@IsString()
 	@IsNotEmpty()
 	name: string;
 
+	@ApiProperty({
+		description: 'The seating capacity of the auditorium',
+		example: 100,
+	})
 	@IsInt()
 	@IsDefined()
 	capacity: number;
 
+	@ApiProperty({
+		description: 'The seat map of the auditorium',
+		example: [
+			{
+				row: 'A',
+				seats: [
+					{
+						column: 1,
+						seatNumber: 'A1',
+					},
+					{
+						column: 2,
+						seatNumber: 'A2',
+					},
+				],
+			},
+			{
+				row: 'B',
+				seats: [
+					{
+						column: 1,
+						seatNumber: 'B1',
+					},
+					{
+						column: 2,
+						seatNumber: 'B2',
+					},
+				],
+			},
+		],
+	})
 	@IsArray()
 	@ArrayNotEmpty()
 	@ArrayUnique((row: RowDto) => row.row)

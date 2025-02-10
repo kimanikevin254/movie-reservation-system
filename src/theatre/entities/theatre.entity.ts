@@ -1,7 +1,8 @@
 import { Auditorium } from 'src/auditorium/entities/auditorium.entity';
 import { BaseEntity } from 'src/common/database/base.entity';
+import { Show } from 'src/show/entities/show.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class Theatre extends BaseEntity {
@@ -16,4 +17,7 @@ export class Theatre extends BaseEntity {
 
 	@OneToMany(() => Auditorium, (auditorium) => auditorium.theatre)
 	auditoriums: Auditorium[];
+
+	@ManyToMany(() => Show, (show) => show.theatres)
+	shows: Show[];
 }

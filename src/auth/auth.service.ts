@@ -34,7 +34,7 @@ export class AuthService {
 			const refreshToken = randomBytes(32).toString('hex');
 
 			// Retrieve user
-			const user = await this.userService.findOneBy('id', userId);
+			const user = await this.userService.findById(userId);
 
 			// Save the refresh token to db
 			const newRefreshToken = this.refreshTokenRepository.create({
@@ -57,7 +57,7 @@ export class AuthService {
 		const payload: IUser = { id: undefined, next_action: 'sign_in' };
 
 		// Retrieve user
-		let user = await this.userService.findOneBy('email', email);
+		let user = await this.userService.findByEmail(email);
 
 		// If user does not exist, create them
 		if (!user) {
@@ -90,7 +90,7 @@ export class AuthService {
 
 	async signup(dto: CompleteSignUpDto) {
 		// Retrieve the user
-		const user = await this.userService.findOneBy('id', dto.userId);
+		const user = await this.userService.findById(dto.userId);
 
 		if (!user) {
 			throw new HttpException(

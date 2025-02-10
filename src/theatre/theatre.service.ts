@@ -1,25 +1,30 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+	forwardRef,
+	HttpException,
+	HttpStatus,
+	Inject,
+	Injectable,
+} from '@nestjs/common';
+import { BaseService } from 'src/common/services/base.service';
 import { UserService } from 'src/user/user.service';
 import { CreateTheatreDto } from './dto/create-theatre.dto';
 import { UpdateTheatreDto } from './dto/update-theatre.dto';
+import { Theatre } from './entities/theatre.entity';
 import { TheatreRepository } from './repositories/theatre.repository';
 
 @Injectable()
-export class TheatreService {
+export class TheatreService extends BaseService<Theatre> {
 	constructor(
 		private readonly theatreRepository: TheatreRepository,
+		@Inject(forwardRef(() => UserService))
 		private readonly userService: UserService,
-	) {}
-
-	private sanitize<T>(obj: T, excludedFields: (keyof T)[]): Partial<T> {
-		const sanitizedObj = { ...obj };
-		excludedFields.forEach((field) => delete sanitizedObj[field]);
-		return sanitizedObj;
+	) {
+		super(theatreRepository);
 	}
 
 	async create(userId: string, dto: CreateTheatreDto) {
 		// Retrieve user
-		const user = await this.userService.findOneBy('id', userId);
+		const user = await this.userService.findById(userId);
 
 		if (!user) {
 			throw new HttpException('Invalid user', HttpStatus.UNAUTHORIZED);
@@ -31,19 +36,19 @@ export class TheatreService {
 		return this.sanitize(savedTheatre, ['user', 'createdAt', 'updatedAt']);
 	}
 
-	async findAll() {
-		const theatres = await this.theatreRepository.find();
-		return theatres.map((theatre) =>
-			this.sanitize(theatre, ['user', 'updatedAt']),
-		);
-	}
-
-	findOne(id: string) {
-		return this.theatreRepository.findOne({ where: { id } });
+	async findOne(id: string) {
+		const theatre = await this.findById(id);
+		return this.sanitize(theatre, ['updatedAt']);
 	}
 
 	findUserTheatre(userId: string, theatreId: string) {
 		return this.theatreRepository.findUserTheatre(userId, theatreId);
+	}
+
+	findUserTheatres(userId: string) {
+		return this.theatreRepository.find({
+			where: { user: { id: userId } },
+		});
 	}
 
 	async update(userId: string, theatreId: string, dto: UpdateTheatreDto) {

@@ -4,11 +4,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { minutes, ThrottlerModule } from '@nestjs/throttler';
 import configuration from 'src/common/config/configuration';
 import { AppController } from './app.controller';
+import { AuditoriumModule } from './auditorium/auditorium.module';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
+import { ShowModule } from './show/show.module';
 import { TheatreModule } from './theatre/theatre.module';
 import { UserModule } from './user/user.module';
-import { AuditoriumModule } from './auditorium/auditorium.module';
+import { ScheduleModule } from './schedule/schedule.module';
 
 @Module({
 	imports: [
@@ -41,6 +43,8 @@ import { AuditoriumModule } from './auditorium/auditorium.module';
 		UserModule,
 		TheatreModule,
 		AuditoriumModule,
+		ShowModule,
+		ScheduleModule,
 	],
 	controllers: [AppController],
 	providers: [],

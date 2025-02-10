@@ -1,23 +1,27 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import {
+	forwardRef,
+	HttpException,
+	HttpStatus,
+	Inject,
+	Injectable,
+} from '@nestjs/common';
+import { BaseService } from 'src/common/services/base.service';
+import { ScheduleService } from 'src/schedule/schedule.service';
 import { TheatreService } from 'src/theatre/theatre.service';
-import { Repository } from 'typeorm';
 import { CreateAuditoriumDto, RowDto } from './dto/create-auditorium.dto';
 import { UpdateAuditoriumDto } from './dto/update-auditorium.dto';
 import { Auditorium } from './entities/auditorium.entity';
+import { AuditoriumRepository } from './repositories/auditorium.repository';
 
 @Injectable()
-export class AuditoriumService {
+export class AuditoriumService extends BaseService<Auditorium> {
 	constructor(
-		@InjectRepository(Auditorium)
-		private readonly auditoriumRepository: Repository<Auditorium>,
+		private readonly auditoriumRepository: AuditoriumRepository,
 		private readonly theatreService: TheatreService,
-	) {}
-
-	private sanitize<T>(obj: T, excludedFields: (keyof T)[]): Partial<T> {
-		const sanitizedObj = { ...obj };
-		excludedFields.forEach((field) => delete sanitizedObj[field]);
-		return sanitizedObj;
+		@Inject(forwardRef(() => ScheduleService))
+		private readonly scheduleService: ScheduleService,
+	) {
+		super(auditoriumRepository);
 	}
 
 	private mapSeatMap(seatMap: RowDto[]) {
@@ -30,6 +34,11 @@ export class AuditoriumService {
 				})),
 			})),
 		};
+	}
+
+	async findOne(id: string) {
+		const auditorium = await this.findOne(id);
+		return this.sanitize(auditorium, ['updatedAt']);
 	}
 
 	async create(userId: string, theatreId: string, dto: CreateAuditoriumDto) {
@@ -63,14 +72,13 @@ export class AuditoriumService {
 	}
 
 	async findTheatreAuditoriums(theatreId: string) {
-		const theatre = await this.theatreService.findOne(theatreId);
-		return this.auditoriumRepository.find({
-			where: { theatre: { id: theatre.id } },
-		});
-	}
+		const theatre = await this.theatreService.findById(theatreId);
 
-	findOne(id: string) {
-		return this.auditoriumRepository.findOne({ where: { id } });
+		if (!theatre) {
+			throw new HttpException('Invalid theatre ID', HttpStatus.NOT_FOUND);
+		}
+
+		return this.auditoriumRepository.findTheatreAuditoriums(theatreId);
 	}
 
 	async update(
@@ -111,8 +119,16 @@ export class AuditoriumService {
 	}
 
 	async findUserAuditorium(userId: string, auditoriumId: string) {
-		return this.auditoriumRepository.findOne({
-			where: { id: auditoriumId, theatre: { user: { id: userId } } },
-		});
+		return this.auditoriumRepository.findUserAuditorium(
+			userId,
+			auditoriumId,
+		);
+	}
+
+	async auditoriumSchedules(theatreId: string, auditoriumId: string) {
+		return this.scheduleService.findAuditoriumSchedules(
+			theatreId,
+			auditoriumId,
+		);
 	}
 }

@@ -1,7 +1,6 @@
-import { EmailVerificationToken } from 'src/auth/entities/email-verification-token.entity';
-import { PasswordResetToken } from 'src/auth/entities/password-reset-token.entity';
 import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 import { BaseEntity } from 'src/common/database/base.entity';
+import { Show } from 'src/show/entities/show.entity';
 import { Theatre } from 'src/theatre/entities/theatre.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 
@@ -16,18 +15,9 @@ export class User extends BaseEntity {
 	@OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
 	refreshTokens: RefreshToken[];
 
-	@OneToMany(
-		() => PasswordResetToken,
-		(passwordResetToken) => passwordResetToken.user,
-	)
-	passwordResetTokens: PasswordResetToken[];
-
-	@OneToMany(
-		() => EmailVerificationToken,
-		(emailVerificationToken) => emailVerificationToken.user,
-	)
-	emailVerificationTokens: EmailVerificationToken[];
-
 	@OneToMany(() => Theatre, (theatre) => theatre.user)
 	theatres: Theatre[];
+
+	@OneToMany(() => Show, (show) => show.user)
+	shows: Show[];
 }

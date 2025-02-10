@@ -1,6 +1,7 @@
 import { BaseEntity } from 'src/common/database/base.entity';
+import { Schedule } from 'src/schedule/entities/schedule.entity';
 import { Theatre } from 'src/theatre/entities/theatre.entity';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 interface SeatMap {
 	rows: {
@@ -25,4 +26,7 @@ export class Auditorium extends BaseEntity {
 
 	@ManyToOne(() => Theatre, (theatre) => theatre.auditoriums)
 	theatre: Theatre;
+
+	@OneToMany(() => Schedule, (schedule) => schedule.auditorium)
+	schedules: Schedule[];
 }
