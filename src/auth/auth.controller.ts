@@ -82,7 +82,7 @@ export class AuthController {
 	})
 	@ApiBearerAuth()
 	@UseGuards(AuthGuard)
-	logout(@Body() logOutDto: LogOutDto) {
-		return this.authService.logOut(logOutDto);
+	logout(@User() user: IUser, @Body() dto: LogOutDto) {
+		return this.authService.logOut(user.id, dto);
 	}
 }

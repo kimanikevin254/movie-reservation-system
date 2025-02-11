@@ -1,66 +1,60 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { MockFunctionMetadata, ModuleMocker } from 'jest-mock';
 import { IUser } from 'src/common/interfaces/user.interface';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
 import { CompleteSignUpDto } from './dto/complete-signup.dto';
+import { LogOutDto } from './dto/logOut.dto';
 import { RefreshTokensDto } from './dto/refresh-tokens.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 
+const moduleMocker = new ModuleMocker(global);
+
+const user = {
+	id: '123',
+	name: 'User User',
+	email: 'user@email.com',
+} as User;
+
+const refreshToken = {
+	id: '123',
+	token: 'refresh',
+	expiresAt: new Date(),
+	user,
+} as RefreshToken;
+
 describe('Auth Service', () => {
 	let service: AuthService;
-
-	const mockUserService = {
-		findById: jest.fn(),
-		findByEmail: jest.fn(),
-		create: jest.fn(),
-		updateUser: jest.fn(),
-	};
-
-	const mockJwtService = {
-		signAsync: jest.fn(),
-	};
-
-	const mockConfigService = {
-		getOrThrow: jest.fn(),
-	};
-
-	const mockRefreshTokenRepo = {
-		create: jest.fn(),
-		save: jest.fn(),
-		findValidToken: jest.fn(),
-		update: jest.fn(),
-		findOneBy: jest.fn(),
-	};
+	let mockUserService: UserService;
+	let mockJwtService: JwtService;
+	let mockRefreshTokenRepo: RefreshTokenRepository;
 
 	beforeEach(async () => {
 		const module = await Test.createTestingModule({
-			providers: [
-				AuthService,
-				{
-					provide: UserService,
-					useValue: mockUserService,
-				},
-				{
-					provide: JwtService,
-					useValue: mockJwtService,
-				},
-				{
-					provide: ConfigService,
-					useValue: mockConfigService,
-				},
-				{
-					provide: RefreshTokenRepository,
-					useValue: mockRefreshTokenRepo,
-				},
-			],
-		}).compile();
+			providers: [AuthService],
+		})
+			.useMocker((token) => {
+				if (typeof token === 'function') {
+					const mockMetadata = moduleMocker.getMetadata(
+						token,
+					) as MockFunctionMetadata<any, any>;
+					const Mock =
+						moduleMocker.generateFromMetadata(mockMetadata);
+					return new Mock();
+				}
+			})
+			.compile();
 
 		service = module.get<AuthService>(AuthService);
+		mockUserService = module.get<UserService>(UserService);
+		mockJwtService = module.get<JwtService>(JwtService);
+		mockRefreshTokenRepo = module.get<RefreshTokenRepository>(
+			RefreshTokenRepository,
+		);
 
 		// Ensure mocks are cleared before each test
 		jest.clearAllMocks();
@@ -73,37 +67,24 @@ describe('Auth Service', () => {
 	describe('handleMagicLink', () => {
 		it('should create a user if they do not exist', async () => {
 			const email = 'user@email.com';
-			const payload: IUser = {
-				id: '123',
-				next_action: 'complete_signup',
-			};
-			const user: Partial<User> = {
-				id: '123',
-				name: 'User User',
-				email: 'user@email.com',
-			};
 
 			jest.spyOn(mockUserService, 'findByEmail').mockResolvedValue(null);
 			jest.spyOn(mockUserService, 'create').mockResolvedValue(user);
 
 			const result = await service.handleMagicLink(email);
 
+			console.log('Result', result);
+
 			expect(mockUserService.findByEmail).toHaveBeenCalledWith(email);
 			expect(mockUserService.create).toHaveBeenCalledWith({ email });
-			expect(result).toEqual(payload);
+			expect(result).toEqual({
+				id: '123',
+				next_action: 'complete_signup',
+			} as IUser);
 		});
 
 		it('should return a user if they exist', async () => {
 			const email = 'user@email.com';
-			const payload: IUser = {
-				id: '123',
-				next_action: 'sign_in',
-			};
-			const user: Partial<User> = {
-				id: '123',
-				name: 'User User',
-				email: 'user@email.com',
-			};
 
 			jest.spyOn(mockUserService, 'findByEmail').mockResolvedValue(user);
 
@@ -111,20 +92,27 @@ describe('Auth Service', () => {
 
 			expect(mockUserService.findByEmail).toHaveBeenCalledWith(email);
 			expect(mockUserService.create).not.toHaveBeenCalled();
-			expect(result).toEqual(payload);
+			expect(result).toEqual({
+				id: '123',
+				next_action: 'sign_in',
+			} as IUser);
 		});
 	});
 
 	describe('loginOrCompleteSignup', () => {
 		it('should request user to complete the signup process if they have not done so yet', async () => {
-			const user: IUser = { id: '123', next_action: 'complete_signup' };
+			const payload: IUser = {
+				id: '123',
+				next_action: 'complete_signup',
+			};
+
 			const message = {
 				userId: '123',
 				message:
 					'Registered successfully. Please provide the additional required information.',
 			};
 
-			const result = await service.loginOrCompleteSignup(user);
+			const result = await service.loginOrCompleteSignup(payload);
 
 			// make sure no tokens are generated
 			expect(mockJwtService.signAsync).not.toHaveBeenCalled();
@@ -132,7 +120,8 @@ describe('Auth Service', () => {
 		});
 
 		it('should return tokens if the user has completed the signup process', async () => {
-			const user: IUser = { id: '123', next_action: 'sign_in' };
+			const payload: IUser = { id: '123', next_action: 'sign_in' };
+
 			const tokens = {
 				accessToken: 'access',
 				refreshToken: 'refresh',
@@ -143,13 +132,11 @@ describe('Auth Service', () => {
 			);
 
 			// Mocking refresh token save
-			jest.spyOn(mockRefreshTokenRepo, 'save').mockResolvedValue({
-				token: tokens.refreshToken,
-				user: user,
-				expiresAt: new Date(Date.now() + 3600000),
-			});
+			jest.spyOn(mockRefreshTokenRepo, 'save').mockResolvedValue(
+				refreshToken,
+			);
 
-			const result = await service.loginOrCompleteSignup(user);
+			const result = await service.loginOrCompleteSignup(payload);
 
 			expect(result).toEqual({
 				tokens: {
@@ -176,7 +163,7 @@ describe('Auth Service', () => {
 			jest.spyOn(mockUserService, 'findById').mockResolvedValue(null);
 
 			// Expect method to throw a HTTP exception
-			expect(service.signup(dto)).rejects.toThrow(error);
+			await expect(service.signup(dto)).rejects.toThrow(error);
 			expect(mockUserService.findById).toHaveBeenCalledWith(dto.userId);
 		});
 
@@ -184,10 +171,6 @@ describe('Auth Service', () => {
 			const dto: CompleteSignUpDto = {
 				userId: '123',
 				name: 'User User',
-			};
-			const user: Partial<User> = {
-				id: '123',
-				email: 'user@emal.com',
 			};
 			const tokens = {
 				accessToken: 'access',
@@ -200,11 +183,9 @@ describe('Auth Service', () => {
 			jest.spyOn(mockJwtService, 'signAsync').mockResolvedValue(
 				tokens.accessToken,
 			);
-			jest.spyOn(mockRefreshTokenRepo, 'save').mockResolvedValue({
-				token: tokens.refreshToken,
-				user: user,
-				expiresAt: new Date(Date.now() + 3600000),
-			});
+			jest.spyOn(mockRefreshTokenRepo, 'save').mockResolvedValue(
+				refreshToken,
+			);
 
 			const result = await service.signup(dto);
 
@@ -236,7 +217,7 @@ describe('Auth Service', () => {
 				'findValidToken',
 			).mockResolvedValue(null);
 
-			expect(service.refreshTokens(dto)).rejects.toThrow(error);
+			await expect(service.refreshTokens(dto)).rejects.toThrow(error);
 			expect(mockRefreshTokenRepo.findValidToken).toHaveBeenCalledWith(
 				dto.refreshToken,
 				dto.userId,
@@ -249,37 +230,27 @@ describe('Auth Service', () => {
 				refreshToken: 'refresh',
 			};
 
-			const validToken: Partial<RefreshToken> = {
-				id: '123',
-				token: 'refresh',
-				user: {
-					id: '123',
-				} as any,
+			const newTokens = {
+				accessToken: 'access1',
+				refreshToken: 'refresh1',
 			};
 
-			const tokens = {
-				accessToken: 'access',
-				refreshToken: 'refresh',
-			};
-
-			const saveTokenResolvedValue = {
-				token: tokens.refreshToken,
-				user: { id: dto.userId },
-				expiresAt: new Date(),
-			};
-
-			// Mocking token gen and save
-			jest.spyOn(mockJwtService, 'signAsync').mockResolvedValue(
-				tokens.accessToken,
-			);
-			jest.spyOn(mockRefreshTokenRepo, 'save').mockResolvedValue(
-				saveTokenResolvedValue,
-			);
+			const savedRefreshToken = {
+				id: '345',
+				token: 'refresh1',
+				expiresAt: new Date(Date.now() + 50 * 60 * 1000),
+			} as RefreshToken;
 
 			jest.spyOn(
 				mockRefreshTokenRepo,
 				'findValidToken',
-			).mockResolvedValue(validToken);
+			).mockResolvedValue(refreshToken);
+			jest.spyOn(mockJwtService, 'signAsync').mockResolvedValue(
+				newTokens.accessToken,
+			);
+			jest.spyOn(mockRefreshTokenRepo, 'save').mockResolvedValue(
+				savedRefreshToken,
+			);
 
 			const result = await service.refreshTokens(dto);
 
@@ -288,13 +259,45 @@ describe('Auth Service', () => {
 				dto.userId,
 			);
 			expect(mockRefreshTokenRepo.update).toHaveBeenCalledWith(
-				{ id: validToken.id },
-				{ expiresAt: saveTokenResolvedValue.expiresAt },
+				{ id: refreshToken.id },
+				{ expiresAt: expect.any(Date) },
 			);
-			expect(result).toEqual({
-				tokens,
-				userId: dto.userId,
-			});
+			expect(result).toEqual({ tokens: newTokens, userId: user.id });
+		});
+	});
+
+	describe('logout', () => {
+		it('should not update the DB if the refresh token is not valid', async () => {
+			const dto = {
+				refreshToken: 'invalid',
+			} as LogOutDto;
+
+			jest.spyOn(
+				mockRefreshTokenRepo,
+				'findValidToken',
+			).mockResolvedValue(null);
+
+			await service.logOut(user.id, dto);
+
+			expect(mockRefreshTokenRepo.update).not.toHaveBeenCalled();
+		});
+
+		it('should mark the refresh token in the DB as expired', async () => {
+			const dto = {
+				refreshToken: 'valid',
+			} as LogOutDto;
+
+			jest.spyOn(
+				mockRefreshTokenRepo,
+				'findValidToken',
+			).mockResolvedValue(refreshToken);
+
+			await service.logOut(user.id, dto);
+
+			expect(mockRefreshTokenRepo.update).toHaveBeenCalledWith(
+				{ id: refreshToken.id },
+				{ expiresAt: expect.any(Date) },
+			);
 		});
 	});
 });

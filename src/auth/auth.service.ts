@@ -141,10 +141,11 @@ export class AuthService {
 		};
 	}
 
-	async logOut(logOutDto: LogOutDto) {
-		const refreshToken = await this.refreshTokenRepository.findOneBy({
-			token: logOutDto.refreshToken,
-		});
+	async logOut(userId: string, dto: LogOutDto) {
+		const refreshToken = await this.refreshTokenRepository.findValidToken(
+			dto.refreshToken,
+			userId,
+		);
 
 		if (refreshToken) {
 			await this.refreshTokenRepository.update(
