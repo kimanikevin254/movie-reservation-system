@@ -31,23 +31,22 @@ export class AuthService {
 				{ expiresIn: accessTokenTtlMins * 60 }, // in secs
 			);
 
-			const refreshToken = randomBytes(32).toString('hex');
-
 			// Retrieve user
 			const user = await this.userService.findById(userId);
 
 			// Save the refresh token to db
 			const newRefreshToken = this.refreshTokenRepository.create({
-				token: refreshToken,
+				token: randomBytes(32).toString('hex'),
 				user,
 				expiresAt: new Date(
 					Date.now() + refreshTokenTtlMins * 60 * 1000, // In ms
 				),
 			});
 
-			await this.refreshTokenRepository.save(newRefreshToken);
+			const savedRefreshToken =
+				await this.refreshTokenRepository.save(newRefreshToken);
 
-			return { accessToken, refreshToken };
+			return { accessToken, refreshToken: savedRefreshToken.token };
 		} catch (error) {
 			throw error;
 		}

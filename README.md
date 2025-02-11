@@ -47,3 +47,6 @@ Endpoints grouped by resource type:
     - GET /shows/:id/schedules - Shows schedules
 
 move all typeorm specific code to repos -> e.g., anywhere relations are mentioned in a service.
+
+Maybe feats:
+    - recommend upcoming shows to users based on their recent purchases. Use redpanda connect to improve the whole flow.

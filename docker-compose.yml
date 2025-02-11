@@ -32,6 +32,7 @@ services:
       - .env
   redis:
     image: redis/redis-stack-server:latest
+    restart: always
     ports:
       - ${REDIS_PORT}:6379
     healthcheck:
