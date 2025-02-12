@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { User } from 'src/common/decorators/user.decorator';
 import { IUser } from 'src/common/interfaces/user.interface';
@@ -24,11 +23,11 @@ import { MagicLoginStrategy } from './strategies/magic-login.strategy';
 
 @Controller('auth')
 @ApiTags('auth')
-@UseGuards(ThrottlerGuard)
+// @UseGuards(ThrottlerGuard)
 export class AuthController {
 	constructor(
 		private readonly authService: AuthService,
-		private readonly magicLoginMagicLoginStrategy: MagicLoginStrategy,
+		private readonly magicLoginStrategy: MagicLoginStrategy,
 	) {}
 
 	@Post('/magic-login')
@@ -42,7 +41,7 @@ export class AuthController {
 		@Res() res: Response,
 		@Body() _dto: MagicLoginDto,
 	) {
-		return this.magicLoginMagicLoginStrategy.send(req, res);
+		return this.magicLoginStrategy.send(req, res);
 	}
 
 	@Get('/magic-login/callback')
