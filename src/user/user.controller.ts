@@ -32,5 +32,7 @@ export class UserController {
 	@ApiOperation({
 		summary: 'Get shows created by the user',
 	})
-	userShows() {}
+	userShows(@User() user: IUser) {
+		return this.userService.findUserShows(user.id);
+	}
 }
