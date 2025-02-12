@@ -73,8 +73,6 @@ describe('Auth Service', () => {
 
 			const result = await service.handleMagicLink(email);
 
-			console.log('Result', result);
-
 			expect(mockUserService.findByEmail).toHaveBeenCalledWith(email);
 			expect(mockUserService.create).toHaveBeenCalledWith({ email });
 			expect(result).toEqual({
