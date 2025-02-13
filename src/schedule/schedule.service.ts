@@ -19,6 +19,7 @@ export class ScheduleService extends BaseService<Schedule> {
 		private readonly scheduleRepository: ScheduleRepository,
 		@Inject(forwardRef(() => ShowService))
 		private readonly showService: ShowService,
+		@Inject(forwardRef(() => AuditoriumService))
 		private readonly auditoriumService: AuditoriumService,
 	) {
 		super(scheduleRepository);
@@ -26,9 +27,9 @@ export class ScheduleService extends BaseService<Schedule> {
 
 	async create(userId: string, dto: CreateScheduleDto) {
 		// Retrieve auditorium
-		const auditorium = await this.auditoriumService.findById(
+		const auditorium = await this.auditoriumService.findUserAuditorium(
+			userId,
 			dto.auditoriumId,
-			['theatre', 'theatre.user', 'schedules', 'schedules.show'],
 		);
 
 		if (!auditorium) {
@@ -54,20 +55,17 @@ export class ScheduleService extends BaseService<Schedule> {
 		const startTime = new Date(dto.startTime);
 		const endTime = new Date(startTime.getTime() + show.duration * 60000); // Convert minutes to milliseconds
 
-		// Check for overlapping schedules and find the conflicting schedule
-		const conflictingSchedule = auditorium.schedules.find(
-			(schedule) =>
-				(startTime >= new Date(schedule.startTime) &&
-					startTime < new Date(schedule.endTime)) ||
-				(endTime > new Date(schedule.startTime) &&
-					endTime <= new Date(schedule.endTime)) ||
-				(startTime <= new Date(schedule.startTime) &&
-					endTime >= new Date(schedule.endTime)),
-		);
+		// Check for overlapping schedules
+		const conflictingSchedulesCount =
+			await this.scheduleRepository.findOverlappingSchedules(
+				auditorium.id,
+				startTime,
+				endTime,
+			);
 
-		if (conflictingSchedule) {
+		if (conflictingSchedulesCount > 0) {
 			throw new HttpException(
-				`Schedule conflicts with an existing booking: Show "${conflictingSchedule.show.name}" from ${conflictingSchedule.startTime} to ${conflictingSchedule.endTime}`,
+				`Schedule conflicts with an existing booking.`,
 				HttpStatus.CONFLICT,
 			);
 		}
