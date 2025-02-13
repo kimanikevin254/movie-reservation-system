@@ -61,4 +61,18 @@ export class ScheduleRepository extends Repository<Schedule> {
 			relations: ['show', 'show.user'],
 		});
 	}
+
+	findOverlappingSchedules(
+		auditoriumId: string,
+		startTime: Date,
+		endTime: Date,
+	) {
+		return this.scheduleRepository.count({
+			where: {
+				auditorium: { id: auditoriumId },
+				startTime,
+				endTime,
+			},
+		});
+	}
 }
