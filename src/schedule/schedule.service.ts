@@ -39,11 +39,6 @@ export class ScheduleService extends BaseService<Schedule> {
 			);
 		}
 
-		// Ensure the user is the owner of the theatre
-		if (auditorium.theatre.user.id !== userId) {
-			throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-		}
-
 		// Retrieve the show
 		const show = await this.showService.findById(dto.showId);
 
