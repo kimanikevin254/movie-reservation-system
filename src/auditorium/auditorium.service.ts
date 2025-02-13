@@ -37,7 +37,15 @@ export class AuditoriumService extends BaseService<Auditorium> {
 	}
 
 	async findOne(id: string) {
-		const auditorium = await this.findOne(id);
+		const auditorium = await this.findById(id);
+
+		if (!auditorium) {
+			throw new HttpException(
+				'Invalid auditorium ID',
+				HttpStatus.NOT_FOUND,
+			);
+		}
+
 		return this.sanitize(auditorium, ['updatedAt']);
 	}
 
@@ -48,7 +56,7 @@ export class AuditoriumService extends BaseService<Auditorium> {
 		);
 
 		if (!theatre) {
-			throw new HttpException('Unathorized', HttpStatus.UNAUTHORIZED);
+			throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
 		}
 
 		// Map DTO to entity format

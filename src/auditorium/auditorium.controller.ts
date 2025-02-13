@@ -40,7 +40,7 @@ export class AuditoriumController {
 	@ApiOperation({
 		summary: 'Retrieves all theatre auditoriums',
 	})
-	findAll(@Param('theatreId') theatreId: string) {
+	findTheatreAuditoriums(@Param('theatreId') theatreId: string) {
 		return this.auditoriumService.findTheatreAuditoriums(theatreId);
 	}
 
@@ -48,10 +48,7 @@ export class AuditoriumController {
 	@ApiOperation({
 		summary: 'Retrieve auditorium details',
 	})
-	findOne(
-		@Param('theatreId') theatreId: string,
-		@Param('auditoriumId') auditoriumId: string,
-	) {
+	findOne(@Param('auditoriumId') auditoriumId: string) {
 		return this.auditoriumService.findOne(auditoriumId);
 	}
 
