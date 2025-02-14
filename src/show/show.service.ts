@@ -20,6 +20,7 @@ export class ShowService extends BaseService<Show> {
 		private readonly showRepository: ShowRepository,
 		@Inject(forwardRef(() => UserService))
 		private readonly userService: UserService,
+		@Inject(forwardRef(() => TheatreService))
 		private readonly theatreService: TheatreService,
 		@Inject(forwardRef(() => ScheduleService))
 		private readonly scheduleService: ScheduleService,
@@ -71,7 +72,9 @@ export class ShowService extends BaseService<Show> {
 			throw new HttpException('Invalid show ID', HttpStatus.NOT_FOUND);
 		}
 
-		return this.showRepository.update({ id: show.id }, { ...dto });
+		await this.showRepository.update({ id: show.id }, { ...dto });
+
+		return;
 	}
 
 	async remove(userId: string, showId: string) {
@@ -81,7 +84,9 @@ export class ShowService extends BaseService<Show> {
 			throw new HttpException('Invalid show ID', HttpStatus.NOT_FOUND);
 		}
 
-		return this.showRepository.remove(show);
+		await this.showRepository.remove(show);
+
+		return;
 	}
 
 	findShowSchedules(showId: string) {
