@@ -1,37 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Show } from '../entities/show.entity';
 
 @Injectable()
 export class ShowRepository extends Repository<Show> {
-	constructor(
-		@InjectRepository(Show)
-		private readonly showRepository: Repository<Show>,
-	) {
-		super(
-			showRepository.target,
-			showRepository.manager,
-			showRepository.queryRunner,
-		);
+	constructor(@InjectDataSource() dataSource: DataSource) {
+		super(Show, dataSource.createEntityManager());
 	}
 
 	findUserShows(userId: string) {
-		return this.showRepository.find({
+		return this.find({
 			where: { user: { id: userId } },
 			relations: ['user'],
 		});
 	}
 
 	findTheatreShows(theatreId: string) {
-		return this.showRepository.find({
+		return this.find({
 			where: { theatres: { id: theatreId } },
 			relations: ['theatre'],
 		});
 	}
 
 	findOwnedShow(userId: string, showId: string) {
-		return this.showRepository.findOne({
+		return this.findOne({
 			where: { id: showId, user: { id: userId } },
 			loadRelationIds: true,
 		});
