@@ -1,23 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Schedule } from '../entities/schedule.entity';
 
 @Injectable()
 export class ScheduleRepository extends Repository<Schedule> {
-	constructor(
-		@InjectRepository(Schedule)
-		private readonly scheduleRepository: Repository<Schedule>,
-	) {
-		super(
-			scheduleRepository.target,
-			scheduleRepository.manager,
-			scheduleRepository.queryRunner,
-		);
+	constructor(@InjectDataSource() dataSource: DataSource) {
+		super(Schedule, dataSource.createEntityManager());
 	}
 
 	findAuditoriumSchedules(theatreId: string, auditoriumId: string) {
-		return this.scheduleRepository.find({
+		return this.find({
 			where: {
 				auditorium: { id: auditoriumId, theatre: { id: theatreId } },
 			},
@@ -36,7 +29,7 @@ export class ScheduleRepository extends Repository<Schedule> {
 	}
 
 	findShowSchedules(showId: string) {
-		return this.scheduleRepository.find({
+		return this.find({
 			where: { show: { id: showId } },
 			select: {
 				id: true,
@@ -56,9 +49,9 @@ export class ScheduleRepository extends Repository<Schedule> {
 	}
 
 	findOwnedSchedule(userId: string, scheduleId: string) {
-		return this.scheduleRepository.findOne({
+		return this.findOne({
 			where: { id: scheduleId, show: { user: { id: userId } } },
-			relations: ['show', 'show.user'],
+			relations: ['show', 'auditorium'],
 		});
 	}
 
@@ -67,7 +60,7 @@ export class ScheduleRepository extends Repository<Schedule> {
 		startTime: Date,
 		endTime: Date,
 	) {
-		return this.scheduleRepository.count({
+		return this.count({
 			where: {
 				auditorium: { id: auditoriumId },
 				startTime,
