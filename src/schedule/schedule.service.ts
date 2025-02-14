@@ -122,8 +122,30 @@ export class ScheduleService extends BaseService<Schedule> {
 				HttpStatus.NOT_FOUND,
 			);
 		}
+		// Dynamically calculate the end time using the show's duration
+		const startTime = new Date(dto.startTime);
+		const endTime = new Date(
+			startTime.getTime() + schedule.show.duration * 60000,
+		);
 
-		await this.scheduleRepository.update(scheduleId, dto);
+		const conflictingSchedulesCount =
+			await this.scheduleRepository.findOverlappingSchedules(
+				schedule.auditorium.id,
+				startTime,
+				endTime,
+			);
+
+		if (conflictingSchedulesCount > 0) {
+			throw new HttpException(
+				`Schedule conflicts with an existing booking.`,
+				HttpStatus.CONFLICT,
+			);
+		}
+
+		await this.scheduleRepository.update(scheduleId, {
+			startTime,
+			endTime,
+		});
 
 		return;
 	}
@@ -140,6 +162,8 @@ export class ScheduleService extends BaseService<Schedule> {
 				HttpStatus.NOT_FOUND,
 			);
 		}
+
+		await this.scheduleRepository.delete(schedule.id);
 
 		return;
 	}
