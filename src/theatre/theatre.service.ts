@@ -26,10 +26,6 @@ export class TheatreService extends BaseService<Theatre> {
 		// Retrieve user
 		const user = await this.userService.findById(userId);
 
-		if (!user) {
-			throw new HttpException('Invalid user', HttpStatus.UNAUTHORIZED);
-		}
-
 		const theatre = this.theatreRepository.create({ ...dto, user });
 		const savedTheatre = await this.theatreRepository.save(theatre);
 
@@ -46,9 +42,7 @@ export class TheatreService extends BaseService<Theatre> {
 	}
 
 	findUserTheatres(userId: string) {
-		return this.theatreRepository.find({
-			where: { user: { id: userId } },
-		});
+		return this.theatreRepository.findUserTheatres(userId);
 	}
 
 	async update(userId: string, theatreId: string, dto: UpdateTheatreDto) {
@@ -62,7 +56,8 @@ export class TheatreService extends BaseService<Theatre> {
 			throw new HttpException('Invalid theatre ID', HttpStatus.NOT_FOUND);
 		}
 
-		return this.theatreRepository.update({ id: theatre.id }, { ...dto });
+		await this.theatreRepository.update({ id: theatre.id }, { ...dto });
+		return;
 	}
 
 	async remove(userId: string, theatreId: string) {
@@ -76,6 +71,7 @@ export class TheatreService extends BaseService<Theatre> {
 			throw new HttpException('Invalid theatre ID', HttpStatus.NOT_FOUND);
 		}
 
-		return this.theatreRepository.delete({ id: theatreId });
+		await this.theatreRepository.delete({ id: theatreId });
+		return;
 	}
 }

@@ -1,24 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Theatre } from '../entities/theatre.entity';
 
 @Injectable()
 export class TheatreRepository extends Repository<Theatre> {
-	constructor(
-		@InjectRepository(Theatre)
-		private readonly theatreRepository: Repository<Theatre>,
-	) {
-		super(
-			theatreRepository.target,
-			theatreRepository.manager,
-			theatreRepository.queryRunner,
-		);
+	constructor(@InjectDataSource() dataSource: DataSource) {
+		super(Theatre, dataSource.createEntityManager());
 	}
 
 	findUserTheatre(userId: string, theatreId: string): Promise<Theatre> {
-		return this.theatreRepository.findOne({
+		return this.findOne({
 			where: { id: theatreId, user: { id: userId } },
+			loadRelationIds: true,
+		});
+	}
+
+	findUserTheatres(userId: string) {
+		return this.find({
+			where: { user: { id: userId } },
+			loadRelationIds: true,
 		});
 	}
 }
