@@ -20,7 +20,7 @@ import { TicketService } from '../ticket.service';
 
 @Controller('/admin/:scheduleId/tickets')
 @ApiBearerAuth()
-@ApiTags('admin-tickets')
+@ApiTags('admin.tickets')
 @UseGuards(AuthGuard)
 export class AdminTicketController {
 	constructor(private readonly ticketService: TicketService) {}
