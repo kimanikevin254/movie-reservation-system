@@ -1,7 +1,8 @@
 import { Auditorium } from 'src/auditorium/entities/auditorium.entity';
 import { BaseEntity } from 'src/common/database/base.entity';
 import { Show } from 'src/show/entities/show.entity';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class Schedule extends BaseEntity {
@@ -16,4 +17,7 @@ export class Schedule extends BaseEntity {
 
 	@Column({ type: 'timestamptz' })
 	endTime: Date;
+
+	@OneToMany(() => Ticket, (ticket) => ticket.schedule)
+	tickets: Ticket[];
 }

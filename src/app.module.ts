@@ -12,6 +12,7 @@ import { ScheduleModule } from './schedule/schedule.module';
 import { ShowModule } from './show/show.module';
 import { TheatreModule } from './theatre/theatre.module';
 import { UserModule } from './user/user.module';
+import { TicketModule } from './ticket/ticket.module';
 
 @Module({
 	imports: [
@@ -61,6 +62,7 @@ import { UserModule } from './user/user.module';
 		AuditoriumModule,
 		ShowModule,
 		ScheduleModule,
+		TicketModule,
 	],
 	controllers: [AppController],
 	providers: [],

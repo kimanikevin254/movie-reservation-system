@@ -167,4 +167,8 @@ export class ScheduleService extends BaseService<Schedule> {
 
 		return;
 	}
+
+	async findOwnedSchedule(userId: string, scheduleId: string) {
+		return this.scheduleRepository.findOwnedSchedule(userId, scheduleId);
+	}
 }

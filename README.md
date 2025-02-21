@@ -38,7 +38,7 @@ Endpoints grouped by resource type:
     - DELETE /shows/:id - DELETE
     - GET /users/me/shows - Get user shows
 
-- Shedule:
+- Schedule:
     - POST /schedules - Create
     - GET /schedules/:id - Details
     - PATCH /schedules/:id - Update
@@ -46,7 +46,12 @@ Endpoints grouped by resource type:
     - GET /theatres/:id/auditoriums/:id/schedules - Auditorium schedules
     - GET /shows/:id/schedules - Shows schedules
 
-move all typeorm specific code to repos -> e.g., anywhere relations are mentioned in a service.
+- Ticket
+    - POST /schedules/:scheduleId/tickets - Create
+    - GET /schedules/:id/tickets - Schedule tickets
+    - GET /schedules/:scheduleId/tickets/:ticketId - Details
+    - DELETE /schedules/:scheduleId/tickets/:ticketId - Delete ticket
+    - PATCH /schedules/:scheduleId/tickets/:ticketId - Update
 
 Maybe feats:
     - recommend upcoming shows to users based on their recent purchases. Use redpanda connect to improve the whole flow.
